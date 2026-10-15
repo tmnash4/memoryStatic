@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>fruit</title>
+    </head>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/tone/14.5.44/Tone.js'></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<body onclick="() => {e => e.preventDefault()}">
+<div id="textDiv">Hello</div>
+<div onclick="() => {e => e.preventDefault()}" id="startDiv">
+    <div class="openingDivs">To play "memory fruit", turn your phone off silent mode (if on iPhone), and turn up your volume. </div><p></p>
+    <div class="openingDivs">Whenever you're ready, go ahead and press the start button! There's no wrong way to play.</div>
+    <button class="openingButtons" id="startPiece">Start</button>
+</div>
+<div onclick="() => {e => e.preventDefault()}" class="flex-fruit" id="fruit" >
+    <div onclick="() => {e => e.preventDefault()}" class="inside-flex" id="inside-flex">
+    <div onclick="() => {e => e.preventDefault()}" id="fruit-proper">
+    </div>
+        <div onclick="() => {e => preventDefuault()}" class="topClass" id="top0"></div>
+        <div onclick="() => {e => preventDefuault()}" class="topClass" id="top1"></div>
+        <div onclick="() => {e => preventDefuault()}" class="topClass" id="top2"></div>
+        <div onclick="() => {e => preventDefuault()}" class="topClass" id="bottom1"></div>
+        <div onclick="() => {e => preventDefuault()}" class="topClass" id="bottom2"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+
+body {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    width: 100vw;
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+a, button, div, input {
+    -webkit-tap-highlight-color: transparent !important;
+}
+.flex-fruit {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    touch-action: none;
+    background-color: rgb(255, 224, 249);
+    overflow: hidden;
+}
+
+#startDiv {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    min-height: 100dvh;
+    box-sizing: border-box;
+
+    background-color: black;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    padding:
+        max(16px, env(safe-area-inset-top))
+        16px
+        max(16px, env(safe-area-inset-bottom));
+
+    overflow-y: auto;
+}
+
+.openingDivs {
+    color: white;
+    font-size: clamp(1.45rem, 5.8vw, 2.25rem);
+    padding: 3% 5%;
+    text-align: center;
+    max-width: 42rem;
+    box-sizing: border-box;
+}
+
+.openingButtons {
+    flex-shrink: 0;
+    text-align: center;
+    font-size: clamp(2.2rem, 10vw, 3.3rem);
+    padding: 0.15em 0.45em;
+    background-color: white;
+    color: black;
+    border-radius: 10px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode',
+        'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+.openingButtons:active {
+    color: white;
+    background-color: black;
+    text-align: center;
+    font-size: 3rem;
+}
+
+#textDiv {
+    position: absolute;
+    width: 100%;
+    font-size: 3rem;
+    text-align: center;
+    top: 15%;
+    display: none;
+}
+
+.inside-flex {
+    position: relative;
+    width: min(75vw, 75dvh);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(0, 0, 0);
+}
+
+#fruit{
+    width: 100vw;
+    height: 100dvh;
+    touch-action: none;
+    overflow: hidden;
+
+}
+
+#fruit-proper {
+    position: absolute;
+    touch-action: none;
+}
+
+.topClass {
+    position: absolute;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    aspect-ratio: 1/1;
+}
+
+#startAudio {
+    position: absolute;
+}
+
+.hide-original-fruit #fruit-proper,
+.hide-original-fruit #top0,
+.hide-original-fruit #top1,
+.hide-original-fruit #top2,
+.hide-original-fruit #bottom1,
+.hide-original-fruit #bottom2,
+.hide-original-fruit #inside-flex {
+    visibility: hidden !important;
+}
+
+#inside-flex.hide-original-fruit {
+    background-color: transparent !important;
+}
+
+
+</style>
+
+<script>
+    let startPiece = document.getElementById("startPiece");
+
+startPiece.addEventListener("pointerdown", () => {
+    startAudio();
+
+    hasStartedPiece = true;
+    createMemoryGame()
+    introDiv.style.display = "none"
+
+
+});
+
+
+  let fruitBackground = document.getElementById("fruit");
+  let fruitProper = document.getElementById('fruit-proper');
+  let top0 = document.getElementById("top0");
+  let top1 = document.getElementById("top1");
+  let top2 = document.getElementById("top2");
+  let bottom1 = document.getElementById("bottom1");
+  let bottom2 = document.getElementById("bottom2");
+  let topClass = document.querySelectorAll(".topClass");
+  let squareBackground = document.getElementById("inside-flex");
+  let textDiv = document.getElementById("textDiv");
+  let introDiv = document.getElementById("startDiv");
+  
+
+  let para = document.getElementById("para")
+  let para1 = document.getElementById("para1")
+  let para2 = document.getElementById("para2")
+  let para3 = document.getElementById("para3")
+  let para4 = document.getElementById("para4")
+
+
+let section = "";
+
+    let memoryOutsideDiv = null;
+
+    function removeMatching() {
+        if (memoryOutsideDiv) {
+            memoryOutsideDiv.remove();
+            memoryOutsideDiv = null;
+        }
+    }
+    let cardCounter = 0;
+    let cardArray = [];
+
+
+    let memoryGameFruitsArray = [["🍉", "🍊", "🍋", "🍌", "🍎", "🍐"], ["🍑", "🍏", "🍒", "🍓", "🥝", "🥥"], ["🍋‍🟩", "🫐", "🍇","🍈", "🥭", "🍍"], ["🌹", "🌻", "🌷", "🪷", "🪻", "🌸"]]
+    let memoryGameSoundsArray = [[], [], [], []];
+    let memoryGameSoundsArray1 = [[], [], [], []];
+
+
+
+    for (i=0;i<6;i++) {
+        let player = new Tone.Player(`media/for_memory/fruitname${i}.mp3`).toDestination();
+        memoryGameSoundsArray[2].push(player);
+    }
+
+    for (i=0;i<6;i++) {
+        let player = new Tone.Player(`media/for_memory/fruitname${i}.mp3`).toDestination();
+        memoryGameSoundsArray1[2].push(player);
+    }
+
+    for (i=0;i<6;i++) {
+        let player = new Tone.Player(`media/for_memory/synth${i}.mp3`).toDestination();
+        memoryGameSoundsArray[0].push(player);
+    }
+
+    for (i=0;i<6;i++) {
+        let player = new Tone.Player(`media/for_memory/synth${i}.mp3`).toDestination();
+        memoryGameSoundsArray1[0].push(player);
+    }
+
+    for (i=0;i<6;i++) {
+        let player = new Tone.Player(`media/for_memory/synth1${i}.mp3`).toDestination();
+        memoryGameSoundsArray[1].push(player);
+    }
+
+    for (i=0;i<6;i++) {
+        let player = new Tone.Player(`media/for_memory/synth1${i}.mp3`).toDestination();
+        memoryGameSoundsArray1[1].push(player);
+    }
+
+    for (i=0;i<6;i++) {
+        let player = new Tone.Player(`media/for_memory/synth2${i}.mp3`).toDestination();
+        memoryGameSoundsArray[3].push(player);
+    }
+
+    for (i=0;i<6;i++) {
+        let player = new Tone.Player(`media/for_memory/synth2${i}.mp3`).toDestination();
+        memoryGameSoundsArray1[3].push(player);
+    }
+
+
+
+
+    let currentArray = 0;
+    let currentSoundFromArray = 0;
+
+    function createMemoryGame() {
+        removeMatching();
+
+        memoryOutsideDiv = document.createElement("div");
+        memoryOutsideDiv.id = "memory-game";
+
+        squareBackground.classList.add("hide-original-fruit");
+
+        Object.assign(memoryOutsideDiv.style, {
+            display: "flex",
+            width: "100%",
+            height: "100%",
+            backgroundColor: "black",
+            position: "fixed",
+            inset: "0",
+            zIndex: "1000",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
+            alignContent: "center",
+            gap: "15px",
+            padding: "15px",
+            boxSizing: "border-box"
+        });
+
+        document.body.appendChild(memoryOutsideDiv);
+
+    const memoryOrder = eachNumberTwice(0, memoryGameFruitsArray[currentArray].length);
+
+    let firstCard = null;
+    let secondCard = null;
+    let boardLocked = false;
+    let matchedPairs = 0;
+
+    const totalPairs = memoryGameFruitsArray[currentArray].length;
+
+    let flipNum = 0;
+
+    for (let i = 0; i < memoryOrder.length; i++) {
+        const insideBox = document.createElement("div");
+        const cardInner = document.createElement("div");
+        const cardFront = document.createElement("div");
+        const cardBack = document.createElement("div");
+
+        Object.assign(insideBox.style, {
+            width: "calc(33% - 15px)",
+            aspectRatio: "1 / 1",
+            perspective: "1000px",
+            cursor: "pointer"
+        });
+
+        Object.assign(cardInner.style, {
+            width: "100%",
+            height: "100%",
+            position: "relative",
+            transformStyle: "preserve-3d",
+            transition: "transform 0.5s"
+        });
+
+        const sharedSideStyles = {
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            top: "0",
+            left: "0",
+            backfaceVisibility: "hidden",
+            boxSizing: "border-box",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            border: "3px solid white"
+        };
+
+        Object.assign(cardFront.style, sharedSideStyles, {
+            backgroundColor: "#C8A2C8"
+        });
+
+        Object.assign(cardBack.style, sharedSideStyles, {
+            backgroundColor: "white",
+            transform: "rotateY(180deg)",
+            fontSize: "4rem"
+        });
+
+        const fruitIndex = memoryOrder[i];
+        cardBack.textContent = memoryGameFruitsArray[currentArray][fruitIndex];
+
+        insideBox.dataset.value = fruitIndex;
+        insideBox.dataset.flipped = "false";
+
+
+        insideBox.addEventListener("click", () => {
+        if (boardLocked) return;
+        if (insideBox.dataset.matched === "true") return;
+        if (insideBox.dataset.flipped === "true") return;
+
+        cardInner.style.transform = "rotateY(180deg)";
+        insideBox.dataset.flipped = "true";
+
+
+        if (flipNum == 0) {
+            console.log(insideBox.dataset.value)
+            
+            memoryGameSoundsArray[currentArray][insideBox.dataset.value].start()
+            console.log()
+            flipNum = 1;
+        }
+    
+        if (firstCard === null) {
+            firstCard = {
+                box: insideBox,
+                inner: cardInner,
+                value: fruitIndex
+            };
+
+            return;
+        }
+
+        secondCard = {
+            box: insideBox,
+            inner: cardInner,
+            value: fruitIndex
+        };
+
+        if (firstCard.value === secondCard.value) {
+            memoryGameSoundsArray[currentArray][insideBox.dataset.value].start()
+            console.log("pair")
+            flipNum = 0
+            firstCard.box.dataset.matched = "true";
+            secondCard.box.dataset.matched = "true";
+
+            matchedPairs++;
+
+            firstCard = null;
+            secondCard = null;
+
+            if (matchedPairs === totalPairs) {
+                boardLocked = true;
+                console.log("you won the game! This is where we would change sounds/emojis")
+                setTimeout(() => {
+                    console.log(currentArray)
+                    memoryOutsideDiv.remove();
+                    currentArray++ 
+                    if (currentArray >= memoryGameFruitsArray.length) currentArray = 0;
+                    createMemoryGame();
+                }, 1500);
+            }
+        } else {
+            console.log("not a pair")
+            flipNum = 0
+            memoryGameSoundsArray[currentArray][insideBox.dataset.value].start()
+            boardLocked = true;
+
+            setTimeout(() => {
+                firstCard.inner.style.transform = "rotateY(0deg)";
+                secondCard.inner.style.transform = "rotateY(0deg)";
+
+                firstCard.box.dataset.flipped = "false";
+                secondCard.box.dataset.flipped = "false";
+
+                firstCard = null;
+                secondCard = null;
+                boardLocked = false;
+            }, 1000);
+        }
+    });
+
+        cardInner.appendChild(cardFront);
+        cardInner.appendChild(cardBack);
+        insideBox.appendChild(cardInner);
+        memoryOutsideDiv.appendChild(insideBox);
+
+              function checkIfMobile() {
+  const isMobileQuery = window.matchMedia("(max-width: 768px) and (pointer: coarse)").matches;
+  
+  if (!isMobileQuery) {
+    insideBox.style.width = "15%"
+  
+  } else {
+    console.log("User is NOT on a cellphone.");
+  }
+}
+
+checkIfMobile()
+
+
+
+    }
+
+        document.body.appendChild(memoryOutsideDiv);
+    }
+
+    function eachNumberTwice(min, max) {
+        const numbers = [];
+
+        for (let i = min; i < max; i++) {
+            numbers.push(i, i);
+        }
+
+        for (let i = numbers.length - 1; i > 0; i--) {
+            const randomIndex = Math.floor(Math.random() * (i + 1));
+            [numbers[i], numbers[randomIndex]] = [numbers[randomIndex], numbers[i]];
+        }
+
+        return numbers;
+    }
+
+
+    async function startAudio() {
+    try {
+        await Tone.start();
+
+        console.log(
+            "audio context state:",
+            Tone.context.state
+        );
+
+        hasBeenCalled = true;
+
+    } catch (error) {
+        console.log("could not start audio:", error);
+    }
+}
+
+
+</script>
+</body>
+</html>
